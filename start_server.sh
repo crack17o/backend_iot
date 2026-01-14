@@ -1,4 +1,0 @@
-#!/bin/bash
-# Démarrer le serveur Django
-cd parking
-python manage.py runserver

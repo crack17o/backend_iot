@@ -49,9 +49,7 @@ db.sqlite3
 logs/
 
 # Models
-*.pt
 *.onnx
-*.pth
 
 # Videos (optionnel)
 videos/*.mp4

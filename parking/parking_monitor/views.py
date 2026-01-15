@@ -165,7 +165,7 @@ def upload_esp32_image(request):
         detector = CarDetectorAPI(parking_capacity=PARKING_CAPACITY)
         
         # Détecter les voitures
-        result = detector.detect_cars_from_bytes(image_data)
+        result = detector.process_image(image_data)
         
         if not result['success']:
             return Response(

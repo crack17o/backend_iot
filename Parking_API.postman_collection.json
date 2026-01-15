@@ -1,0 +1,444 @@
+{
+	"info": {
+		"_postman_id": "parking-api-collection",
+		"name": "Parking API - Système de Surveillance",
+		"description": "Collection Postman pour tester les API du système de surveillance de parking IoT",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Statut",
+			"item": [
+				{
+					"name": "GET - Dernier statut",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/latest/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								"latest",
+								""
+							]
+						},
+						"description": "Récupère le dernier statut enregistré du parking"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Statistiques (24h)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/stats/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								"stats",
+								""
+							]
+						},
+						"description": "Récupère les statistiques des 24 dernières heures"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Historique (paginated)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/?page=1&page_size=10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Numéro de page"
+								},
+								{
+									"key": "page_size",
+									"value": "10",
+									"description": "Nombre d'éléments par page"
+								}
+							]
+						},
+						"description": "Récupère l'historique avec pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Historique filtré par statut",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/?status=full&page_size=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								""
+							],
+							"query": [
+								{
+									"key": "status",
+									"value": "full",
+									"description": "Filtrer par statut: 'available' ou 'full'"
+								},
+								{
+									"key": "page_size",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Récupère l'historique filtré par statut (available/full)"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Historique trié",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/?ordering=-occupancy_rate&page_size=5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								""
+							],
+							"query": [
+								{
+									"key": "ordering",
+									"value": "-occupancy_rate",
+									"description": "Trier par: -occupancy_rate, -timestamp, occupancy_rate, timestamp"
+								},
+								{
+									"key": "page_size",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Récupère l'historique trié par taux d'occupation"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Détail d'un enregistrement",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								"1",
+								""
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "1",
+									"description": "ID de l'enregistrement"
+								}
+							]
+						},
+						"description": "Récupère les détails d'un enregistrement spécifique"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints pour consulter le statut et l'historique du parking"
+		},
+		{
+			"name": "Mise à jour",
+			"item": [
+				{
+					"name": "POST - Mise à jour manuelle",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"occupied\": 8,\n    \"total_spaces\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/update/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"update",
+								""
+							]
+						},
+						"description": "Met à jour manuellement le statut du parking"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Mise à jour (parking plein)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"occupied\": 15,\n    \"total_spaces\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/update/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"update",
+								""
+							]
+						},
+						"description": "Met à jour le statut avec parking complet"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Mise à jour (parking vide)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"occupied\": 0,\n    \"total_spaces\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/update/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"update",
+								""
+							]
+						},
+						"description": "Met à jour le statut avec parking vide"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints pour mettre à jour le statut du parking"
+		},
+		{
+			"name": "Upload Image",
+			"item": [
+				{
+					"name": "POST - Upload image ESP32-CAM",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": [],
+									"description": "Image JPEG depuis ESP32-CAM"
+								},
+								{
+									"key": "source",
+									"value": "esp32",
+									"type": "text",
+									"disabled": true,
+									"description": "Source (optionnel, défaut: esp32)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/upload-image/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"upload-image",
+								""
+							]
+						},
+						"description": "Upload une image depuis ESP32-CAM et détecte automatiquement les voitures avec YOLO"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoint pour upload d'images et détection automatique"
+		},
+		{
+			"name": "Tests d'erreurs",
+			"item": [
+				{
+					"name": "POST - Erreur validation (occupied négatif)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"occupied\": -5,\n    \"total_spaces\": 15\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/update/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"update",
+								""
+							]
+						},
+						"description": "Test de validation - devrait retourner 400 Bad Request"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Erreur validation (données manquantes)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"occupied\": 5\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/update/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"update",
+								""
+							]
+						},
+						"description": "Test de validation - devrait retourner 400 Bad Request"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Erreur upload (sans image)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "{{base_url}}/upload-image/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"upload-image",
+								""
+							]
+						},
+						"description": "Test de validation - devrait retourner 400 Bad Request"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Erreur 404 (ID inexistant)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/status/99999/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"status",
+								"99999",
+								""
+							]
+						},
+						"description": "Test d'erreur 404 - devrait retourner Not Found"
+					},
+					"response": []
+				}
+			],
+			"description": "Tests de gestion d'erreurs et validation"
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000/api",
+			"type": "string"
+		}
+	]
+}

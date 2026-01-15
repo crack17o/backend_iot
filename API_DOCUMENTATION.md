@@ -235,5 +235,17 @@ curl -X GET http://localhost:8000/api/status/history/
 
 ---
 
+## 📚 Documentation détaillée
+
+Pour des guides détaillés sur des endpoints spécifiques :
+
+- **[Documentation Upload Image ESP32-CAM](./API_UPLOAD_IMAGE.md)** - Guide complet pour l'endpoint `/api/upload-image/`
+  - Configuration ESP32-CAM
+  - Exemples de code (Python, JavaScript, Arduino)
+  - Détails techniques YOLO
+  - Dépannage
+
+---
+
 **API Version** : 1.0  
-**Dernière mise à jour** : 14 Janvier 2026
+**Dernière mise à jour** : 15 Janvier 2026

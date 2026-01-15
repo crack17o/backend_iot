@@ -3,6 +3,7 @@ import numpy as np
 from ultralytics import YOLO
 import logging
 import os
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -12,13 +13,32 @@ class CarDetectorAPI:
     Pas de tracking temporel, juste détection instantanée
     """
     
-    def __init__(self, model_path="yolov10n.pt", parking_capacity=15):
+    def __init__(self, model_path=None, parking_capacity=15):
         """
         Args:
-            model_path: chemin vers yolov10n.pt
+            model_path: chemin vers yolov10n.pt (si None, cherche automatiquement)
             parking_capacity: quota de places (15 dans ton cas)
         """
         self.parking_capacity = parking_capacity
+        
+        # Chercher le modèle si le chemin n'est pas fourni
+        if model_path is None:
+            # Chercher depuis la racine du projet (backend_iot)
+            base_dir = Path(__file__).resolve().parent.parent.parent.parent
+            possible_paths = [
+                base_dir / "yolov10n.pt",  # Racine du projet
+                base_dir / "parking" / "yolov10n.pt",  # Dans parking/
+                Path("yolov10n.pt"),  # Répertoire courant
+            ]
+            
+            for path in possible_paths:
+                if path.exists():
+                    model_path = str(path)
+                    break
+            
+            if model_path is None:
+                model_path = "yolov10n.pt"  # Par défaut, YOLO le téléchargera
+        
         self.model_path = model_path
         self.model = None
         self.vehicle_classes = [2, 5, 7]  # car, bus, truck COCO IDs

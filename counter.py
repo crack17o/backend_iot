@@ -21,8 +21,8 @@ FRAME_HEIGHT = 480
 STATIONARY_DISTANCE = 80     # pixels (plus réaliste)
 PARKING_TIME = 5             # secondes (test)
 
-PARKING_CAPACITY = 20        # Capacité du parking
-PARKING_API_URL = "http://localhost:8000/api/status/update/"
+PARKING_CAPACITY = 20        # Capacité du parking (fixée à 20 véhicules)
+PARKING_API_URL = "http://localhost:8000/api/parking/update/"
 UPDATE_INTERVAL = 10         # Envoyer les données toutes les 10s
 
 # =========================

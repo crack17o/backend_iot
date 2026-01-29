@@ -1,0 +1,803 @@
+{% extends 'base.html' %}
+
+{% block title %}Situation Live - Parking Intelligence{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <div>
+            <h2 class="text-3xl font-bold text-gray-900">Situation en Temps Réel</h2>
+            <p class="text-sm text-gray-500 mt-1">Vérification automatique du trafic toutes les 45 minutes</p>
+        </div>
+        <div class="flex space-x-3 items-center">
+            <!-- Bouton subtil pour activer/désactiver Google Maps -->
+            {% if user.is_staff %}
+            <form method="post" action="{% url 'web:toggle_google_maps' %}" class="inline" id="toggle-google-maps-form">
+                {% csrf_token %}
+                <button type="submit" 
+                        class="px-3 py-1.5 text-xs rounded-md transition-opacity hover:opacity-80 {% if google_maps_enabled %}bg-green-100 text-green-700 border border-green-300{% else %}bg-red-100 text-red-700 border border-red-300{% endif %}"
+                        title="{% if google_maps_enabled %}Cliquer pour désactiver l'API Google Maps{% else %}Cliquer pour activer l'API Google Maps{% endif %}">
+                    <span class="inline-flex items-center">
+                        {% if google_maps_enabled %}
+                        <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>API Activée
+                        {% else %}
+                        <span class="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>API Désactivée
+                        {% endif %}
+                    </span>
+                </button>
+            </form>
+            {% endif %}
+            <a href="{% url 'web:dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                ← Retour
+            </a>
+        </div>
+    </div>
+
+    <!-- Status Indicator -->
+    <div class="bg-white rounded-lg shadow-md p-4">
+        <div class="flex items-center space-x-2">
+            <div class="w-3 h-3 rounded-full {% if parking_is_fresh or traffic_aller_is_fresh or traffic_retour_is_fresh %}bg-green-500 animate-pulse{% else %}bg-gray-400{% endif %}"></div>
+            <span class="text-sm font-medium text-gray-700">
+                {% if parking_is_fresh or traffic_aller_is_fresh or traffic_retour_is_fresh %}
+                    Données à jour (moins d'1 minute)
+                {% else %}
+                    Données obsolètes (plus d'1 minute)
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Parking Status Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_parking and latest_parking.status == 'full' %}border-red-500{% else %}border-green-500{% endif %}">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Parking</h3>
+                {% if parking_is_fresh %}
+                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">LIVE</span>
+                {% else %}
+                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">OBSOLÈTE</span>
+                {% endif %}
+            </div>
+            
+            {% if latest_parking %}
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Places occupées</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">
+                            {{ latest_parking.occupied }}/{{ latest_parking.total_spaces }}
+                        </p>
+                    </div>
+                    <div class="text-4xl">
+                        {% if latest_parking.status == 'full' %}🔴{% else %}🟢{% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Places disponibles</p>
+                    <p class="text-xl font-semibold text-gray-900">{{ latest_parking.available }}</p>
+                </div>
+                
+                <div class="w-full bg-gray-200 rounded-full h-3">
+                    <div class="bg-{% if latest_parking.status == 'full' %}red{% else %}green{% endif %}-500 h-3 rounded-full transition-all" style="width: {{ latest_parking.occupancy_rate }}%"></div>
+                </div>
+                
+                <div class="flex justify-between text-xs text-gray-500">
+                    <span>{{ latest_parking.occupancy_rate|floatformat:1 }}% d'occupation</span>
+                    <span>{{ latest_parking.get_status_display }}</span>
+                </div>
+                
+                <div class="pt-3 border-t border-gray-200">
+                    <p class="text-xs text-gray-500">
+                        Dernière mise à jour : 
+                        <span class="font-medium {% if parking_is_fresh %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ latest_parking.timestamp|date:"H:i:s" }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-500">Aucune donnée disponible</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Traffic Aller Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_traffic_aller and latest_traffic_aller.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_aller and latest_traffic_aller.traffic_status == 'modere' %}border-yellow-500{% else %}border-green-500{% endif %}">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Trafic Aller</h3>
+                {% if traffic_aller_is_fresh %}
+                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">LIVE</span>
+                {% else %}
+                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">OBSOLÈTE</span>
+                {% endif %}
+            </div>
+            
+            {% if latest_traffic_aller %}
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Durée</p>
+                        <p class="text-3xl font-bold text-gray-900 mt-1">
+                            {{ latest_traffic_aller.duration_in_traffic_minutes|floatformat:0 }} min
+                        </p>
+                    </div>
+                    <div class="text-4xl">
+                        {% if latest_traffic_aller.traffic_status == 'bloque' %}🔴
+                        {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}🟠
+                        {% elif latest_traffic_aller.traffic_status == 'modere' %}🟡
+                        {% else %}🟢{% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Statut</p>
+                    <p class="text-lg font-semibold text-gray-900">{{ latest_traffic_aller.get_traffic_status_display }}</p>
+                </div>
+                
+                {% if latest_traffic_aller.delay_seconds > 0 %}
+                <div class="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p class="text-sm text-red-800">
+                        <strong>Retard :</strong> +{{ latest_traffic_aller.delay_minutes|floatformat:1 }} min
+                        ({{ latest_traffic_aller.delay_percentage|floatformat:1 }}%)
+                    </p>
+                </div>
+                {% else %}
+                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p class="text-sm text-green-800">Aucun retard</p>
+                </div>
+                {% endif %}
+                
+                <div class="pt-3 border-t border-gray-200" id="traffic-aller-info">
+                    <p class="text-xs text-gray-500">
+                        Distance : {{ latest_traffic_aller.distance_km|floatformat:2 }} km
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Dernière mise à jour : 
+                        <span class="font-medium {% if traffic_aller_is_fresh %}text-green-600{% else %}text-red-600{% endif %}" id="traffic-aller-time">
+                            {{ latest_traffic_aller.timestamp|date:"H:i:s" }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-500">Aucune donnée disponible</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Traffic Retour Card -->
+        <div id="traffic-retour-card" class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_traffic_retour and latest_traffic_retour.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_retour and latest_traffic_retour.traffic_status == 'modere' %}border-yellow-500{% else %}border-green-500{% endif %}">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-semibold text-gray-900">Trafic Retour</h3>
+                <span id="traffic-retour-badge" class="px-2 py-1 text-xs font-medium {% if traffic_retour_is_fresh %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %} rounded">
+                    {% if traffic_retour_is_fresh %}LIVE{% else %}OBSOLÈTE{% endif %}
+                </span>
+            </div>
+            
+            {% if latest_traffic_retour %}
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-600">Durée</p>
+                        <p id="traffic-retour-duration" class="text-3xl font-bold text-gray-900 mt-1">
+                            {{ latest_traffic_retour.duration_in_traffic_minutes|floatformat:0 }} min
+                        </p>
+                    </div>
+                    <div id="traffic-retour-emoji" class="text-4xl">
+                        {% if latest_traffic_retour.traffic_status == 'bloque' %}🔴
+                        {% elif latest_traffic_retour.traffic_status == 'embouteillage' %}🟠
+                        {% elif latest_traffic_retour.traffic_status == 'modere' %}🟡
+                        {% else %}🟢{% endif %}
+                    </div>
+                </div>
+                
+                <div>
+                    <p class="text-sm text-gray-600">Statut</p>
+                    <p id="traffic-retour-status" class="text-lg font-semibold text-gray-900">{{ latest_traffic_retour.get_traffic_status_display }}</p>
+                </div>
+                
+                <div id="traffic-retour-delay-box" class="{% if latest_traffic_retour.delay_seconds > 0 %}bg-red-50 border border-red-200 rounded-lg p-3{% else %}bg-green-50 border border-green-200 rounded-lg p-3{% endif %}">
+                    <p class="text-sm {% if latest_traffic_retour.delay_seconds > 0 %}text-red-800{% else %}text-green-800{% endif %}">
+                        {% if latest_traffic_retour.delay_seconds > 0 %}
+                        <strong>Retard :</strong> +<span id="traffic-retour-delay-minutes">{{ latest_traffic_retour.delay_minutes|floatformat:1 }}</span> min
+                        (<span id="traffic-retour-delay-percentage">{{ latest_traffic_retour.delay_percentage|floatformat:1 }}</span>%)
+                        {% else %}
+                        Aucun retard
+                        {% endif %}
+                    </p>
+                </div>
+                
+                <div class="pt-3 border-t border-gray-200" id="traffic-retour-info">
+                    <p class="text-xs text-gray-500">
+                        Distance : <span id="traffic-retour-distance">{{ latest_traffic_retour.distance_km|floatformat:2 }}</span> km
+                    </p>
+                    <p class="text-xs text-gray-500 mt-1">
+                        Dernière mise à jour : 
+                        <span id="traffic-retour-time" class="font-medium {% if traffic_retour_is_fresh %}text-green-600{% else %}text-red-600{% endif %}">
+                            {{ latest_traffic_retour.timestamp|date:"H:i:s" }}
+                        </span>
+                    </p>
+                </div>
+            </div>
+            {% else %}
+            <div class="text-center py-8">
+                <p class="text-gray-500">Aucune donnée disponible</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+            <!-- Graphique de visualisation du trajet -->
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Visualisation du Trajet</h3>
+                
+                <!-- Graphique SVG avec deux points et un trait -->
+                <div class="flex justify-center items-center py-8">
+                    <svg id="traffic-graph" width="100%" height="200" viewBox="0 0 800 200" class="border border-gray-200 rounded-lg bg-gray-50">
+                        <!-- Ligne de trajet -->
+                        <line id="traffic-line" 
+                              x1="100" y1="100" 
+                              x2="700" y2="100" 
+                              stroke-width="8" 
+                              stroke-linecap="round"
+                              stroke="{% if latest_traffic_aller %}{% if latest_traffic_aller.traffic_status == 'bloque' %}#ef4444{% elif latest_traffic_aller.traffic_status == 'embouteillage' %}#f97316{% elif latest_traffic_aller.traffic_status == 'modere' %}#eab308{% else %}#22c55e{% endif %}{% else %}#6b7280{% endif %}" />
+                        
+                        <!-- Point de départ -->
+                        <circle id="start-point" cx="100" cy="100" r="15" fill="#3b82f6" stroke="white" stroke-width="3">
+                            <title>Point de départ</title>
+                        </circle>
+                        <text x="100" y="140" text-anchor="middle" class="text-xs font-medium fill-gray-700">Départ</text>
+                        
+                        <!-- Point d'arrivée -->
+                        <circle id="end-point" cx="700" cy="100" r="15" fill="#3b82f6" stroke="white" stroke-width="3">
+                            <title>Point d'arrivée</title>
+                        </circle>
+                        <text x="700" y="140" text-anchor="middle" class="text-xs font-medium fill-gray-700">Arrivée</text>
+                        
+                        <!-- Légende du statut -->
+                        <text id="traffic-status-text" 
+                              x="400" y="80" 
+                              text-anchor="middle" 
+                              class="text-sm font-semibold fill-gray-900">
+                            {% if latest_traffic_aller %}
+                                {{ latest_traffic_aller.get_traffic_status_display }}
+                            {% else %}
+                                Aucune donnée
+                            {% endif %}
+                        </text>
+                    </svg>
+                </div>
+                
+                <!-- Informations du trajet -->
+                <div class="mt-4 text-sm text-gray-600 space-y-2">
+                    <div class="flex justify-between">
+                        <span><strong>Point de départ :</strong> {{ start_latitude }}, {{ start_longitude }}</span>
+                        <span id="traffic-aller-status-badge" class="px-2 py-1 text-xs font-medium rounded
+                            {% if latest_traffic_aller %}
+                                {% if latest_traffic_aller.traffic_status == 'bloque' %}bg-red-100 text-red-800
+                                {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}bg-orange-100 text-orange-800
+                                {% elif latest_traffic_aller.traffic_status == 'modere' %}bg-yellow-100 text-yellow-800
+                                {% else %}bg-green-100 text-green-800{% endif %}
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {% if latest_traffic_aller %}{{ latest_traffic_aller.get_traffic_status_display }}{% else %}N/A{% endif %}
+                        </span>
+                    </div>
+                    <div>
+                        <span><strong>Point d'arrivée :</strong> {{ end_latitude }}, {{ end_longitude }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Google Maps Carte (commentée) -->
+            {% comment %}
+            {% if google_maps_api_key %}
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Visualisation du Trajet</h3>
+                <div id="map" style="height: 400px; width: 100%; border-radius: 8px;"></div>
+                <div class="mt-4 text-sm text-gray-600">
+                    <p><strong>Point de départ :</strong> {{ start_latitude }}, {{ start_longitude }}</p>
+                    <p><strong>Point d'arrivée :</strong> {{ end_latitude }}, {{ end_longitude }}</p>
+                </div>
+            </div>
+            {% else %}
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <p class="text-sm text-yellow-800">
+                    <strong>Note :</strong> Pour afficher la carte, configurez votre clé API Google Maps dans les paramètres.
+                </p>
+            </div>
+            {% endif %}
+            {% endcomment %}
+
+    <!-- Action Buttons -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
+        <div class="flex flex-wrap gap-3 items-center">
+            <form method="post" action="{% url 'web:check_traffic_now' %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="direction" value="aller">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                    Vérifier Trafic Aller
+                </button>
+            </form>
+            <form method="post" action="{% url 'web:check_traffic_now' %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="direction" value="retour">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                    Vérifier Trafic Retour
+                </button>
+            </form>
+            <div class="flex items-center space-x-2">
+                <div id="auto-check-indicator" class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+                <span class="text-sm text-gray-600">Vérification automatique toutes les 45 minutes</span>
+                <span id="last-check-time" class="text-xs text-gray-500 ml-2"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<!-- Google Maps API - Désactivée (carte commentée) -->
+{% comment %}
+{% if google_maps_api_key %}
+<script async defer src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=geometry&region=CD&language=fr&callback=initMap"></script>
+{% endif %}
+{% endcomment %}
+
+<script>
+    // Coordonnées du trajet
+    const startLat = parseFloat('{{ start_latitude }}');
+    const startLng = parseFloat('{{ start_longitude }}');
+    const endLat = parseFloat('{{ end_latitude }}');
+    const endLng = parseFloat('{{ end_longitude }}');
+    
+    let map;
+    let directionsService;
+    let directionsRenderer;
+    
+    // Variable pour éviter l'initialisation multiple
+    let mapInitialized = false;
+    
+    // Initialiser la carte (appelée par le callback de Google Maps)
+    function initMap() {
+        // Éviter l'initialisation multiple
+        if (mapInitialized) {
+            console.log('Carte déjà initialisée, ignoré');
+            return;
+        }
+        
+        {% if google_maps_api_key %}
+        // Vérifier que Google Maps est chargé
+        if (typeof google === 'undefined' || typeof google.maps === 'undefined') {
+            console.error('Google Maps API n\'est pas chargée');
+            return;
+        }
+        
+        const mapElement = document.getElementById('map');
+        if (!mapElement) {
+            console.error('Élément map non trouvé');
+            return;
+        }
+        
+        try {
+            map = new google.maps.Map(mapElement, {
+                zoom: 15,
+                center: { lat: (startLat + endLat) / 2, lng: (startLng + endLng) / 2 },
+                mapTypeId: 'roadmap'
+            });
+            
+            directionsService = new google.maps.DirectionsService();
+            directionsRenderer = new google.maps.DirectionsRenderer({
+                map: map,
+                suppressMarkers: false
+            });
+            
+            // Afficher le trajet
+            calculateAndDisplayRoute();
+            mapInitialized = true;
+            console.log('✅ Carte Google Maps initialisée');
+        } catch (error) {
+            console.error('❌ Erreur lors de l\'initialisation de la carte:', error);
+        }
+        {% endif %}
+    }
+    
+    // Calculer et afficher le trajet
+    function calculateAndDisplayRoute() {
+        directionsService.route({
+            origin: { lat: startLat, lng: startLng },
+            destination: { lat: endLat, lng: endLng },
+            travelMode: google.maps.TravelMode.DRIVING,
+            provideRouteAlternatives: false,
+            region: 'CD' // Spécifier explicitement la République Démocratique du Congo (Kinshasa)
+        }, function(response, status) {
+            if (status === 'OK') {
+                directionsRenderer.setDirections(response);
+                console.log('✅ Trajet affiché sur la carte (Kinshasa, RDC)');
+            } else {
+                console.error('❌ Erreur Directions API:', status);
+            }
+        });
+    }
+    
+    // Vérifier le trafic automatiquement toutes les 10 secondes
+    function checkTraffic(direction) {
+        console.log(`Vérification du trafic ${direction}...`);
+        
+        const csrfToken = getCookie('csrftoken');
+        if (!csrfToken) {
+            console.error('Token CSRF non trouvé');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('direction', direction);
+        formData.append('csrfmiddlewaretoken', csrfToken);
+        
+        fetch('{% url "web:check_traffic_now" %}', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: formData,
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            console.log(`Réponse reçue: ${response.status} ${response.statusText}`);
+            if (response.ok) {
+                return response.json();
+            } else {
+                // Essayer de lire le JSON même en cas d'erreur
+                return response.json().then(data => {
+                    console.error('Erreur dans la réponse:', data);
+                    return Promise.reject(data);
+                }).catch(() => {
+                    return Promise.reject({ error: `Erreur HTTP ${response.status}` });
+                });
+            }
+        })
+        .then(data => {
+            if (data.success) {
+                console.log('✅ Trafic vérifié avec succès:', data.message);
+                console.log('Données:', data.data);
+                
+                // Mettre à jour l'affichage sans recharger la page
+                updateTrafficDisplay(direction, data.data);
+            } else {
+                console.error('❌ Erreur lors de la vérification:', data.error);
+                
+                // Si l'API est désactivée, afficher un message spécial
+                if (data.disabled) {
+                    const prefix = direction === 'aller' ? 'traffic-aller' : 'traffic-retour';
+                    const statusEl = document.getElementById(`${prefix}-status`);
+                    if (statusEl) {
+                        statusEl.textContent = 'Indisponible';
+                        statusEl.className = 'text-lg font-semibold text-gray-500';
+                    }
+                    
+                    // Mettre à jour le badge
+                    const badgeEl = document.getElementById(`${prefix}-badge`);
+                    if (badgeEl) {
+                        badgeEl.textContent = 'ERREUR';
+                        badgeEl.className = 'px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded';
+                    }
+                    
+                    // Mettre à jour le graphique
+                    updateTrafficGraph(direction, { traffic_status: 'disabled' });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('❌ Erreur lors de la vérification du trafic:', error);
+            if (error.error) {
+                console.error('Détails:', error.error);
+            }
+        });
+    }
+    
+    // Mettre à jour l'affichage du trafic sans recharger la page
+    function updateTrafficDisplay(direction, data) {
+        console.log(`Mise à jour de l'affichage pour ${direction}:`, data);
+        
+        const prefix = direction === 'aller' ? 'traffic-aller' : 'traffic-retour';
+        
+        // Mettre à jour le badge LIVE
+        const badge = document.getElementById(`${prefix}-badge`);
+        if (badge) {
+            badge.className = 'px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded';
+            badge.textContent = 'LIVE';
+        }
+        
+        // Mettre à jour la durée
+        const durationEl = document.getElementById(`${prefix}-duration`);
+        if (durationEl && data.duration_in_traffic_minutes !== undefined) {
+            durationEl.textContent = Math.round(data.duration_in_traffic_minutes) + ' min';
+        }
+        
+        // Mettre à jour l'emoji et la bordure de la carte
+        const emojiEl = document.getElementById(`${prefix}-emoji`);
+        const cardEl = document.getElementById(`${prefix}-card`);
+        if (emojiEl && cardEl && data.traffic_status) {
+            let emoji = '🟢';
+            let borderColor = 'border-green-500';
+            if (data.traffic_status === 'bloque') {
+                emoji = '🔴';
+                borderColor = 'border-red-500';
+            } else if (data.traffic_status === 'embouteillage') {
+                emoji = '🟠';
+                borderColor = 'border-red-500';
+            } else if (data.traffic_status === 'modere') {
+                emoji = '🟡';
+                borderColor = 'border-yellow-500';
+            }
+            emojiEl.textContent = emoji;
+            // Mettre à jour la bordure
+            cardEl.classList.remove('border-red-500', 'border-yellow-500', 'border-green-500');
+            cardEl.classList.add(borderColor);
+        }
+        
+        // Mettre à jour le statut
+        const statusEl = document.getElementById(`${prefix}-status`);
+        if (statusEl && data.traffic_status) {
+            const statusLabels = {
+                'fluide': 'Fluide',
+                'modere': 'Modéré',
+                'embouteillage': 'Embouteillage',
+                'bloque': 'Bloqué'
+            };
+            statusEl.textContent = statusLabels[data.traffic_status] || data.traffic_status;
+        }
+        
+        // Mettre à jour le délai
+        const delayBox = document.getElementById(`${prefix}-delay-box`);
+        if (delayBox && data.delay_seconds !== undefined) {
+            if (data.delay_seconds > 0) {
+                delayBox.className = 'bg-red-50 border border-red-200 rounded-lg p-3';
+                delayBox.querySelector('p').innerHTML = `<strong>Retard :</strong> +<span id="${prefix}-delay-minutes">${data.delay_minutes.toFixed(1)}</span> min (<span id="${prefix}-delay-percentage">${data.delay_percentage.toFixed(1)}</span>%)`;
+                delayBox.querySelector('p').className = 'text-sm text-red-800';
+            } else {
+                delayBox.className = 'bg-green-50 border border-green-200 rounded-lg p-3';
+                delayBox.querySelector('p').textContent = 'Aucun retard';
+                delayBox.querySelector('p').className = 'text-sm text-green-800';
+            }
+        }
+        
+        // Mettre à jour la distance
+        const distanceEl = document.getElementById(`${prefix}-distance`);
+        if (distanceEl && data.distance_km !== undefined) {
+            distanceEl.textContent = data.distance_km.toFixed(2);
+        }
+        
+        // Mettre à jour l'heure
+        const timeEl = document.getElementById(`${prefix}-time`);
+        if (timeEl && data.timestamp) {
+            const date = new Date(data.timestamp);
+            timeEl.textContent = date.toLocaleTimeString('fr-FR');
+            timeEl.className = 'font-medium text-green-600';
+        }
+        
+        // Mettre à jour le graphique de trafic
+        updateTrafficGraph(direction, data);
+        
+        // Mettre à jour l'indicateur de dernière vérification
+        const lastCheckEl = document.getElementById('last-check-time');
+        if (lastCheckEl) {
+            const now = new Date();
+            lastCheckEl.textContent = `Dernière vérification: ${now.toLocaleTimeString('fr-FR')}`;
+        }
+        
+        // Faire clignoter l'indicateur
+        const indicator = document.getElementById('auto-check-indicator');
+        if (indicator) {
+            indicator.classList.remove('bg-green-500', 'bg-red-500');
+            indicator.classList.add('bg-blue-500');
+            setTimeout(() => {
+                indicator.classList.remove('bg-blue-500');
+                indicator.classList.add('bg-green-500');
+            }, 500);
+        }
+        
+        console.log(`✅ Affichage mis à jour pour ${direction}`);
+    }
+    
+    // Mettre à jour le graphique de trafic
+    function updateTrafficGraph(direction, data) {
+        // On met à jour le graphique seulement pour la direction "aller" (ou on peut faire les deux)
+        if (direction !== 'aller') {
+            return; // On affiche seulement le trafic aller sur le graphique
+        }
+        
+        const trafficLine = document.getElementById('traffic-line');
+        const trafficStatusText = document.getElementById('traffic-status-text');
+        const statusBadge = document.getElementById('traffic-aller-status-badge');
+        
+        if (!trafficLine || !trafficStatusText || !statusBadge) {
+            return;
+        }
+        
+        // Déterminer la couleur selon le statut
+        let color = '#6b7280'; // Gris par défaut
+        let statusLabel = 'Aucune donnée';
+        let badgeClasses = 'bg-gray-100 text-gray-800';
+        
+        if (data.traffic_status === 'disabled') {
+            color = '#9ca3af'; // Gris foncé pour désactivé
+            statusLabel = 'Indisponible';
+            badgeClasses = 'bg-gray-200 text-gray-600';
+        } else if (data.traffic_status) {
+            const statusLabels = {
+                'fluide': 'Fluide',
+                'modere': 'Modéré',
+                'embouteillage': 'Embouteillage',
+                'bloque': 'Bloqué'
+            };
+            
+            statusLabel = statusLabels[data.traffic_status] || data.traffic_status;
+            
+            switch(data.traffic_status) {
+                case 'bloque':
+                    color = '#ef4444'; // Rouge
+                    badgeClasses = 'bg-red-100 text-red-800';
+                    break;
+                case 'embouteillage':
+                    color = '#f97316'; // Orange
+                    badgeClasses = 'bg-orange-100 text-orange-800';
+                    break;
+                case 'modere':
+                    color = '#eab308'; // Jaune
+                    badgeClasses = 'bg-yellow-100 text-yellow-800';
+                    break;
+                case 'fluide':
+                default:
+                    color = '#22c55e'; // Vert
+                    badgeClasses = 'bg-green-100 text-green-800';
+                    break;
+            }
+        }
+        
+        // Mettre à jour la ligne
+        trafficLine.setAttribute('stroke', color);
+        
+        // Mettre à jour le texte du statut
+        trafficStatusText.textContent = statusLabel;
+        
+        // Mettre à jour le badge
+        statusBadge.textContent = statusLabel;
+        statusBadge.className = `px-2 py-1 text-xs font-medium rounded ${badgeClasses}`;
+        
+        console.log(`✅ Graphique mis à jour: ${statusLabel} (${color})`);
+    }
+    
+    // Fonction pour obtenir le cookie CSRF
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+    
+    // Vérifier le trafic toutes les 10 secondes
+    let trafficCheckInterval;
+    let lastCheckTime = null;
+    
+    function startAutoCheck() {
+        console.log('Démarrage de la vérification automatique du trafic...');
+        
+        // Vérifier immédiatement au démarrage
+        checkTraffic('aller');
+        lastCheckTime = Date.now();
+        
+        // Puis vérifier toutes les 10 secondes
+        trafficCheckInterval = setInterval(function() {
+            const now = Date.now();
+            const timeSinceLastCheck = now - lastCheckTime;
+            
+            // Vérifier le trafic aller et retour alternativement
+            const direction = (Math.floor((now / 10000) % 2) === 0) ? 'aller' : 'retour';
+            
+            console.log(`Vérification automatique du trafic (${direction})...`);
+            checkTraffic(direction);
+            lastCheckTime = now;
+        }, 2700000); // 45 minutes (2700000 millisecondes)
+        
+        console.log('Vérification automatique démarrée (toutes les 45 minutes)');
+    }
+    
+    // Démarrer la vérification automatique au chargement de la page
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== Initialisation de la page Situation Live ===');
+        console.log('Coordonnées:', {
+            start: { lat: startLat, lng: startLng },
+            end: { lat: endLat, lng: endLng }
+        });
+        
+        {% if google_maps_api_key %}
+        // La carte sera initialisée par le callback de Google Maps
+        // Si Google Maps est déjà chargé, initialiser immédiatement
+        if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
+            initMap();
+        } else {
+            console.log('⏳ Attente du chargement de Google Maps API...');
+        }
+        {% else %}
+        console.warn('⚠️ Clé API Google Maps non configurée - la carte ne s\'affichera pas');
+        {% endif %}
+        
+        // Vérifier que le token CSRF est disponible
+        const csrfToken = getCookie('csrftoken');
+        if (csrfToken) {
+            console.log('✅ Token CSRF trouvé');
+        } else {
+            console.error('❌ Token CSRF non trouvé - les requêtes AJAX échoueront');
+        }
+        
+        // Gérer le formulaire de toggle Google Maps avec AJAX
+        const toggleForm = document.getElementById('toggle-google-maps-form');
+        if (toggleForm) {
+            toggleForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(toggleForm);
+                formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
+                
+                fetch(toggleForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: formData,
+                    credentials: 'same-origin'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Mettre à jour le bouton sans recharger la page
+                        const button = toggleForm.querySelector('button');
+                        const textSpan = button.querySelector('span.inline-flex');
+                        
+                        if (data.enabled) {
+                            button.className = 'px-3 py-1.5 text-xs rounded-md transition-opacity hover:opacity-80 bg-green-100 text-green-700 border border-green-300';
+                            textSpan.innerHTML = '<span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>API Activée';
+                            button.title = "Cliquer pour désactiver l'API Google Maps";
+                        } else {
+                            button.className = 'px-3 py-1.5 text-xs rounded-md transition-opacity hover:opacity-80 bg-red-100 text-red-700 border border-red-300';
+                            textSpan.innerHTML = '<span class="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>API Désactivée';
+                            button.title = "Cliquer pour activer l'API Google Maps";
+                        }
+                        
+                        console.log('✅ API Google Maps', data.enabled ? 'activée' : 'désactivée');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ Erreur lors du toggle:', error);
+                    // Recharger la page en cas d'erreur
+                    location.reload();
+                });
+            });
+        }
+        
+        startAutoCheck();
+        console.log('=== Initialisation terminée ===');
+    });
+    
+    // Nettoyer l'intervalle si la page est quittée
+    window.addEventListener('beforeunload', function() {
+        if (trafficCheckInterval) {
+            clearInterval(trafficCheckInterval);
+            console.log('Vérification automatique arrêtée');
+        }
+    });
+</script>
+{% endblock %}
+{% endblock %}

@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+
+{% block title %}Paramètres - Parking Intelligence{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-3xl font-bold text-gray-900">Paramètres</h2>
+        <a href="{% url 'web:dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+            ← Retour
+        </a>
+    </div>
+
+    <!-- Settings Form -->
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <h3 class="text-xl font-semibold text-gray-900 mb-6">Coordonnées GPS du Trajet</h3>
+        
+        {% if messages %}
+        <div class="mb-4">
+            {% for message in messages %}
+            <div class="rounded-md p-4 mb-4 {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="space-y-6">
+            {% csrf_token %}
+            
+            <!-- Point de Départ -->
+            <div class="border-b border-gray-200 pb-6">
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Point de Départ</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="start_latitude" class="block text-sm font-medium text-gray-700 mb-2">
+                            Latitude
+                        </label>
+                        <input 
+                            type="number" 
+                            step="any"
+                            id="start_latitude" 
+                            name="start_latitude" 
+                            value="{{ start_latitude }}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="48.8566"
+                        >
+                    </div>
+                    <div>
+                        <label for="start_longitude" class="block text-sm font-medium text-gray-700 mb-2">
+                            Longitude
+                        </label>
+                        <input 
+                            type="number" 
+                            step="any"
+                            id="start_longitude" 
+                            name="start_longitude" 
+                            value="{{ start_longitude }}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="2.3522"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Point d'Arrivée -->
+            <div class="border-b border-gray-200 pb-6">
+                <h4 class="text-lg font-medium text-gray-900 mb-4">Point d'Arrivée</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="end_latitude" class="block text-sm font-medium text-gray-700 mb-2">
+                            Latitude
+                        </label>
+                        <input 
+                            type="number" 
+                            step="any"
+                            id="end_latitude" 
+                            name="end_latitude" 
+                            value="{{ end_latitude }}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="48.8606"
+                        >
+                    </div>
+                    <div>
+                        <label for="end_longitude" class="block text-sm font-medium text-gray-700 mb-2">
+                            Longitude
+                        </label>
+                        <input 
+                            type="number" 
+                            step="any"
+                            id="end_longitude" 
+                            name="end_longitude" 
+                            value="{{ end_longitude }}"
+                            required
+                            class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            placeholder="2.3376"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Info -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p class="text-sm text-blue-800">
+                    <strong>Note :</strong> Ces coordonnées sont utilisées pour vérifier l'état du trafic entre le point de départ et le point d'arrivée. 
+                    La direction "Aller" utilise ces coordonnées telles quelles, tandis que la direction "Retour" les inverse.
+                </p>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="flex justify-end">
+                <button 
+                    type="submit" 
+                    class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                    Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

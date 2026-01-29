@@ -1,0 +1,220 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Parking Intelligence{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex justify-between items-center">
+        <h2 class="text-3xl font-bold text-gray-900">Dashboard</h2>
+        <div class="flex space-x-3">
+            <form method="post" action="{% url 'web:check_traffic_now' %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="direction" value="aller">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Vérifier Trafic Aller
+                </button>
+            </form>
+            <form method="post" action="{% url 'web:check_traffic_now' %}" class="inline">
+                {% csrf_token %}
+                <input type="hidden" name="direction" value="retour">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    Vérifier Trafic Retour
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Parking Status Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_parking and latest_parking.status == 'full' %}border-red-500{% else %}border-green-500{% endif %}">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Parking</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">
+                        {% if latest_parking %}
+                            {{ latest_parking.occupied }}/{{ latest_parking.total_spaces }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {% if latest_parking %}
+                            {{ latest_parking.get_status_display }}
+                        {% else %}
+                            Aucune donnée
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="text-4xl">
+                    {% if latest_parking and latest_parking.status == 'full' %}🔴{% else %}🟢{% endif %}
+                </div>
+            </div>
+            {% if latest_parking %}
+            <div class="mt-4">
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-{% if latest_parking.status == 'full' %}red{% else %}green{% endif %}-500 h-2 rounded-full" style="width: {{ latest_parking.occupancy_rate }}%"></div>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">{{ latest_parking.occupancy_rate|floatformat:1 }}% d'occupation</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Traffic Aller Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_traffic_aller and latest_traffic_aller.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_aller and latest_traffic_aller.traffic_status == 'modere' %}border-yellow-500{% else %}border-green-500{% endif %}">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Trafic Aller</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">
+                        {% if latest_traffic_aller %}
+                            {{ latest_traffic_aller.duration_in_traffic_minutes|floatformat:0 }} min
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {% if latest_traffic_aller %}
+                            {{ latest_traffic_aller.get_traffic_status_display }}
+                        {% else %}
+                            Aucune donnée
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="text-4xl">
+                    {% if latest_traffic_aller %}
+                        {% if latest_traffic_aller.traffic_status == 'bloque' %}🔴
+                        {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}🟠
+                        {% elif latest_traffic_aller.traffic_status == 'modere' %}🟡
+                        {% else %}🟢{% endif %}
+                    {% else %}⚪{% endif %}
+                </div>
+            </div>
+            {% if latest_traffic_aller and latest_traffic_aller.delay_seconds > 0 %}
+            <div class="mt-4">
+                <p class="text-xs text-red-600">+{{ latest_traffic_aller.delay_minutes|floatformat:1 }} min de retard</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Traffic Retour Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_traffic_retour and latest_traffic_retour.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_retour and latest_traffic_retour.traffic_status == 'modere' %}border-yellow-500{% else %}border-green-500{% endif %}">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Trafic Retour</p>
+                    <p class="text-3xl font-bold text-gray-900 mt-2">
+                        {% if latest_traffic_retour %}
+                            {{ latest_traffic_retour.duration_in_traffic_minutes|floatformat:0 }} min
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        {% if latest_traffic_retour %}
+                            {{ latest_traffic_retour.get_traffic_status_display }}
+                        {% else %}
+                            Aucune donnée
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="text-4xl">
+                    {% if latest_traffic_retour %}
+                        {% if latest_traffic_retour.traffic_status == 'bloque' %}🔴
+                        {% elif latest_traffic_retour.traffic_status == 'embouteillage' %}🟠
+                        {% elif latest_traffic_retour.traffic_status == 'modere' %}🟡
+                        {% else %}🟢{% endif %}
+                    {% else %}⚪{% endif %}
+                </div>
+            </div>
+            {% if latest_traffic_retour and latest_traffic_retour.delay_seconds > 0 %}
+            <div class="mt-4">
+                <p class="text-xs text-red-600">+{{ latest_traffic_retour.delay_minutes|floatformat:1 }} min de retard</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Stats Card -->
+        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div>
+                <p class="text-sm font-medium text-gray-600">Statistiques 24h</p>
+                <p class="text-2xl font-bold text-gray-900 mt-2">{{ parking_stats.total_records }}</p>
+                <p class="text-sm text-gray-500 mt-1">Enregistrements parking</p>
+            </div>
+            <div class="mt-4 space-y-2">
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Occupation moyenne</span>
+                    <span class="font-medium">{{ parking_stats.avg_occupancy }}%</span>
+                </div>
+                <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">Pic d'occupation</span>
+                    <span class="font-medium">{{ parking_stats.peak_occupied }}/{{ parking_capacity }}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Parking -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Activité Parking Récente</h3>
+            <div class="space-y-3">
+                {% for record in recent_parking %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">{{ record.occupied }}/{{ record.total_spaces }} places</p>
+                        <p class="text-xs text-gray-500">{{ record.timestamp|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-medium rounded {% if record.status == 'full' %}bg-red-100 text-red-800{% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ record.get_status_display }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-500 text-center py-4">Aucune donnée récente</p>
+                {% endfor %}
+            </div>
+            <a href="{% url 'web:parking_history' %}" class="block text-center mt-4 text-sm text-blue-600 hover:text-blue-800">
+                Voir tout l'historique →
+            </a>
+        </div>
+
+        <!-- Recent Traffic -->
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Activité Trafic Récente</h3>
+            <div class="space-y-3">
+                {% for record in recent_traffic %}
+                <div class="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div>
+                        <p class="text-sm font-medium text-gray-900">
+                            {{ record.get_direction_display }} - {{ record.duration_in_traffic_minutes|floatformat:0 }} min
+                        </p>
+                        <p class="text-xs text-gray-500">{{ record.timestamp|date:"d/m/Y H:i" }}</p>
+                    </div>
+                    <span class="px-2 py-1 text-xs font-medium rounded 
+                        {% if record.traffic_status == 'bloque' %}bg-red-100 text-red-800
+                        {% elif record.traffic_status == 'embouteillage' %}bg-orange-100 text-orange-800
+                        {% elif record.traffic_status == 'modere' %}bg-yellow-100 text-yellow-800
+                        {% else %}bg-green-100 text-green-800{% endif %}">
+                        {{ record.get_traffic_status_display }}
+                    </span>
+                </div>
+                {% empty %}
+                <p class="text-sm text-gray-500 text-center py-4">Aucune donnée récente</p>
+                {% endfor %}
+            </div>
+            <a href="{% url 'web:traffic_history' %}" class="block text-center mt-4 text-sm text-blue-600 hover:text-blue-800">
+                Voir tout l'historique →
+            </a>
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+    // Auto-refresh toutes les 30 secondes
+    setTimeout(function() {
+        location.reload();
+    }, 30000);
+</script>
+{% endblock %}
+{% endblock %}

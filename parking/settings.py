@@ -10,13 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
-import pymysql
-pymysql.install_as_MySQLdb()
-
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
+# BASE_DIR pointe vers le dossier parking/ (où se trouve settings.py)
+BASE_DIR = Path(__file__).resolve().parent
 
 
 # Quick-start development settings - unsuitable for production
@@ -29,6 +27,11 @@ SECRET_KEY = 'django-insecure-o+7x-%9+1o4ni0=vav^69#uytaxug^=as-y0h9(ikmlb#nrz2+
 DEBUG = True
 
 ALLOWED_HOSTS = []
+
+# Configuration de l'authentification
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/accounts/login/'
 
 
 # Application definition
@@ -60,7 +63,7 @@ ROOT_URLCONF = 'parking.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / 'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -80,16 +83,8 @@ WSGI_APPLICATION = 'parking.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'parking_db',  # Nom de la base de données
-        'USER': 'root',  # Nom d'utilisateur MySQL
-        'PASSWORD': 'jellymaweja7@gmail.com',
-        'HOST': 'localhost',  # Ou l'adresse IP de votre serveur MySQL
-        'PORT': '3307',  # Port MySQL par défaut
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-        },
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
 
@@ -129,8 +124,38 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============================================================================
+# DJANGO REST FRAMEWORK
+# ============================================================================
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',
+    ],
+    # Par défaut, pas de restriction globale : les vues peuvent définir leurs permissions
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.AllowAny',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.OrderingFilter',
+        'rest_framework.filters.SearchFilter',
+    ],
+}
+
+# ============================================================================
+# MEDIA FILES (Images uploadées)
+# ============================================================================
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'uploads'

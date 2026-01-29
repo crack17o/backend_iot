@@ -16,8 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+from parking_monitor import auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('parking_monitor.urls')),
+    path('accounts/login/', auth_views.login_view, name='login'),
+    path('accounts/logout/', auth_views.logout_view, name='logout'),
+    path('', include('parking_monitor.web_urls')),
 ]
+
+# Servir les fichiers média en développement
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

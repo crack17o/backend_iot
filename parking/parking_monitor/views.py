@@ -228,12 +228,10 @@ def upload_esp32_image(request):
     Upload une image depuis ESP32-CAM et détecte les voitures
     
     Authentification:
-    - Via token API (header: X-API-Token) pour ESP32
-    - Via JWT pour utilisateurs authentifiés
+    - Aucune clé API requise pour l'ESP32 en local
     
     Form-data:
         - image: <fichier image>
-        - device_id: <id du dispositif> (optionnel si token API)
     
     Response:
         {
@@ -246,14 +244,6 @@ def upload_esp32_image(request):
         }
     """
     try:
-        # Vérifier la clé API simple pour l'ESP32
-        api_key = request.headers.get('X-API-Key') or request.GET.get('api_key')
-        if api_key != ESP32_API_KEY:
-            return Response(
-                {"error": "Clé API invalide"},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
         # Vérifier l'image
         if 'image' not in request.FILES:
             return Response(
@@ -285,9 +275,10 @@ def upload_esp32_image(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
         
-        # Sauvegarder l'image
+        # Sauvegarder l'image dans MEDIA_ROOT (= BASE_DIR / 'uploads')
+        # -> chemin disque : <projet>/parking/uploads/esp32/YYYY/MM/DD/esp32_xxxx.jpg
         file_name = f"esp32_{uuid.uuid4().hex[:8]}.jpg"
-        file_path = f"uploads/esp32/{datetime.now().strftime('%Y/%m/%d')}/{file_name}"
+        file_path = f"esp32/{datetime.now().strftime('%Y/%m/%d')}/{file_name}"
         saved_path = default_storage.save(file_path, ContentFile(image_data))
         
         # Créer l'enregistrement

@@ -31,42 +31,64 @@
     </style>
     {% block extra_css %}{% endblock %}
 </head>
-<body class="bg-gray-50 min-h-screen" style="font-family: 'Poppins', sans-serif;">
+<body class="bg-slate-950 min-h-screen text-slate-100" style="font-family: 'Poppins', sans-serif;">
     <!-- Navigation -->
-    <nav class="bg-white shadow-sm border-b border-gray-200">
+    <nav class="bg-slate-900/95 border-b border-slate-800 backdrop-blur">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
-                <div class="flex">
+                <div class="flex items-center space-x-3">
                     <div class="flex-shrink-0 flex items-center">
-                        <h1 class="text-2xl font-bold text-gray-900">🚗ParkIntelligence</h1>
+                        <div class="h-9 w-9 rounded-lg bg-blue-600 flex items-center justify-center shadow-sm shadow-blue-500/40">
+                            <span class="text-xs font-semibold tracking-tight">PI</span>
+                        </div>
+                        <span class="ml-3 text-xl font-semibold tracking-tight text-slate-50">
+                            ParkIntelligence
+                        </span>
                     </div>
-                    <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                        <a href="{% url 'web:dashboard' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    <div class="hidden sm:ml-8 sm:flex sm:space-x-6 text-sm">
+                        <a href="{% url 'web:dashboard' %}"
+                           class="inline-flex items-center px-2.5 pt-1 border-b-2 text-sm font-medium {% if request.path == '/' %}border-blue-500 text-slate-50{% else %}border-transparent text-slate-300 hover:text-slate-50 hover:border-slate-600{% endif %}">
                             Dashboard
                         </a>
-                        <a href="{% url 'web:live_situation' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="{% url 'web:live_situation' %}"
+                           class="inline-flex items-center px-2.5 pt-1 border-b-2 text-sm font-medium {% if '/live' in request.path %}border-blue-500 text-slate-50{% else %}border-transparent text-slate-300 hover:text-slate-50 hover:border-slate-600{% endif %}">
                             Situation Live
                         </a>
-                        <a href="{% url 'web:parking_history' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="{% url 'web:parking_history' %}"
+                           class="inline-flex items-center px-2.5 pt-1 border-b-2 text-sm font-medium {% if '/parking' in request.path %}border-blue-500 text-slate-50{% else %}border-transparent text-slate-300 hover:text-slate-50 hover:border-slate-600{% endif %}">
                             Historique Parking
                         </a>
-                        <a href="{% url 'web:traffic_history' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="{% url 'web:traffic_history' %}"
+                           class="inline-flex items-center px-2.5 pt-1 border-b-2 text-sm font-medium {% if '/traffic' in request.path %}border-blue-500 text-slate-50{% else %}border-transparent text-slate-300 hover:text-slate-50 hover:border-slate-600{% endif %}">
                             Historique Trafic
                         </a>
-                        <a href="{% url 'web:settings' %}" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                        <a href="{% url 'web:settings' %}"
+                           class="inline-flex items-center px-2.5 pt-1 border-b-2 text-sm font-medium {% if '/settings' in request.path %}border-blue-500 text-slate-50{% else %}border-transparent text-slate-300 hover:text-slate-50 hover:border-slate-600{% endif %}">
                             Paramètres
-                        </a>
-                        <a href="/admin/" class="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                            Admin
                         </a>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
                     {% if user.is_authenticated %}
-                    <span class="text-sm text-gray-600">{{ user.username }}</span>
-                    <a href="{% url 'logout' %}" class="text-sm text-gray-600 hover:text-gray-900">Déconnexion</a>
+                    <span class="text-xs uppercase tracking-wide text-slate-400">Connecté</span>
+                    <span class="inline-flex items-center px-2.5 py-1 rounded-full bg-slate-800 text-xs text-slate-100 border border-slate-700">
+                        {{ user.username }}
+                    </span>
+                    {% if user.is_staff %}
+                    <a href="/admin/"
+                       class="text-xs font-medium text-slate-300 hover:text-slate-50 hover:underline">
+                        Admin
+                    </a>
+                    {% endif %}
+                    <a href="{% url 'logout' %}"
+                       class="text-xs font-medium text-slate-300 hover:text-slate-50 hover:underline">
+                        Déconnexion
+                    </a>
                     {% else %}
-                    <a href="{% url 'login' %}" class="text-sm text-blue-600 hover:text-blue-800">Connexion</a>
+                    <a href="{% url 'login' %}"
+                       class="px-3 py-1.5 rounded-lg text-xs font-medium bg-blue-600 text-white hover:bg-blue-500 shadow-sm shadow-blue-500/40">
+                        Connexion
+                    </a>
                     {% endif %}
                 </div>
             </div>
@@ -75,9 +97,12 @@
 
     <!-- Messages -->
     {% if messages %}
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-4 space-y-2">
         {% for message in messages %}
-        <div class="rounded-md p-4 mb-4 {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
+        <div class="rounded-md px-4 py-3 text-sm border 
+            {% if message.tags == 'error' %}bg-red-950/60 border-red-500/60 text-red-100
+            {% elif message.tags == 'success' %}bg-emerald-950/60 border-emerald-500/60 text-emerald-100
+            {% else %}bg-slate-900/80 border-slate-700 text-slate-100{% endif %}">
             {{ message }}
         </div>
         {% endfor %}
@@ -90,10 +115,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white border-t border-gray-200 mt-12">
+    <footer class="border-t border-slate-900/60 mt-12 bg-slate-950">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <p class="text-center text-sm text-gray-500">
-                Parking Intelligence - Système IoT & IA © 2026
+            <p class="text-center text-xs text-slate-500">
+                Parking Intelligence · Système IoT &amp; IA · © 2026
             </p>
         </div>
     </footer>

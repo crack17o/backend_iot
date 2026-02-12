@@ -140,9 +140,7 @@ L'API utilise l'authentification par **sessions Django**. Pour les requêtes dep
 **Upload une image depuis ESP32-CAM et détecte les voitures**
 
 - **Méthode** : POST
-- **Authentification** : 
-  - Session Django OU
-  - Header `X-API-Key: <votre_cle_esp32>`
+- **Authentification** : aucune (pour usage local et tests)
 - **Content-Type** : `multipart/form-data`
 
 **Body (Form-data)**

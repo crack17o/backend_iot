@@ -26,7 +26,7 @@ MAX_HISTORY_RECORDS = 100
 UPLOAD_MAX_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Clé API simple pour l'ESP32 (à personnaliser en production)
-ESP32_API_KEY = "CHANGE_ME_ESP32_KEY"
+ESP32_API_KEY = "SifHte2SJdnfJ3iiV86kfZpuNr0xXuXOxr_-otNuCyQ;"
 
 # Google Maps API
 GOOGLE_MAPS_API_KEY = "AIzaSyC7_fbskwFKcDOZsOcyup9X8wx_SDxU8jY"  # À configurer avec votre clé API Google Maps
@@ -42,4 +42,3 @@ ROUTE_END_LONGITUDE = 15.2973434   # Longitude point d'arrivée
 # Messages
 PARKING_FULL_MESSAGE = "Parking plein - aucune place disponible"
 PARKING_AVAILABLE_MESSAGE = "Places disponibles"
-API_KEY = "SifHte2SJdnfJ3iiV86kfZpuNr0xXuXOxr_-otNuCyQ;

@@ -7,8 +7,8 @@
     <!-- Header -->
     <div class="flex justify-between items-center">
         <div>
-            <h2 class="text-3xl font-bold text-gray-900">Situation en Temps Réel</h2>
-            <p class="text-sm text-gray-500 mt-1">Vérification automatique du trafic toutes les 45 minutes</p>
+            <h2 class="text-3xl font-bold text-slate-50">Situation en Temps Réel</h2>
+            <p class="text-sm text-slate-400 mt-1">Vérification automatique du trafic toutes les 45 minutes</p>
         </div>
         <div class="flex space-x-3 items-center">
             <!-- Bouton subtil pour activer/désactiver Google Maps -->
@@ -28,17 +28,17 @@
                 </button>
             </form>
             {% endif %}
-            <a href="{% url 'web:dashboard' %}" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+            <a href="{% url 'web:dashboard' %}" class="px-4 py-2 bg-slate-800 text-slate-100 rounded-lg hover:bg-slate-700 border border-slate-700 transition">
                 ← Retour
             </a>
         </div>
     </div>
 
     <!-- Status Indicator -->
-    <div class="bg-white rounded-lg shadow-md p-4">
+    <div class="bg-slate-900/80 rounded-xl shadow-md shadow-slate-900/60 p-4 border border-slate-800">
         <div class="flex items-center space-x-2">
             <div class="w-3 h-3 rounded-full {% if parking_is_fresh or traffic_aller_is_fresh or traffic_retour_is_fresh %}bg-green-500 animate-pulse{% else %}bg-gray-400{% endif %}"></div>
-            <span class="text-sm font-medium text-gray-700">
+            <span class="text-sm font-medium text-slate-200">
                 {% if parking_is_fresh or traffic_aller_is_fresh or traffic_retour_is_fresh %}
                     Données à jour (moins d'1 minute)
                 {% else %}
@@ -51,13 +51,13 @@
     <!-- Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Parking Status Card -->
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_parking and latest_parking.status == 'full' %}border-red-500{% else %}border-green-500{% endif %}">
+        <div class="bg-slate-900/80 rounded-xl shadow-md shadow-slate-900/60 p-6 border border-slate-800 border-l-4 {% if latest_parking and latest_parking.status == 'full' %}border-red-500{% else %}border-emerald-500{% endif %}">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Parking</h3>
+                <h3 class="text-lg font-semibold text-slate-50">Parking</h3>
                 {% if parking_is_fresh %}
-                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">LIVE</span>
+                <span class="px-2 py-1 text-xs font-medium bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/60">LIVE</span>
                 {% else %}
-                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">OBSOLÈTE</span>
+                <span class="px-2 py-1 text-xs font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">OBSOLÈTE</span>
                 {% endif %}
             </div>
             
@@ -65,34 +65,38 @@
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Places occupées</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1">
+                        <p class="text-sm font-medium text-slate-400">Places occupées</p>
+                        <p class="text-3xl font-bold text-slate-50 mt-1">
                             {{ latest_parking.occupied }}/{{ latest_parking.total_spaces }}
                         </p>
                     </div>
-                    <div class="text-4xl">
-                        {% if latest_parking.status == 'full' %}🔴{% else %}🟢{% endif %}
+                    <div>
+                        {% if latest_parking.status == 'full' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-red-500" aria-hidden="true"></span>
+                        {% else %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-green-500" aria-hidden="true"></span>
+                        {% endif %}
                     </div>
                 </div>
                 
                 <div>
-                    <p class="text-sm text-gray-600">Places disponibles</p>
-                    <p class="text-xl font-semibold text-gray-900">{{ latest_parking.available }}</p>
+                    <p class="text-sm text-slate-400">Places disponibles</p>
+                    <p class="text-xl font-semibold text-slate-50">{{ latest_parking.available }}</p>
                 </div>
                 
-                <div class="w-full bg-gray-200 rounded-full h-3">
-                    <div class="bg-{% if latest_parking.status == 'full' %}red{% else %}green{% endif %}-500 h-3 rounded-full transition-all" style="width: {{ latest_parking.occupancy_rate }}%"></div>
+                <div class="w-full bg-slate-800 rounded-full h-3">
+                    <div class="bg-{% if latest_parking.status == 'full' %}red{% else %}emerald{% endif %}-500 h-3 rounded-full transition-all" style="width: {{ latest_parking.occupancy_rate }}%"></div>
                 </div>
                 
-                <div class="flex justify-between text-xs text-gray-500">
+                <div class="flex justify-between text-xs text-slate-400">
                     <span>{{ latest_parking.occupancy_rate|floatformat:1 }}% d'occupation</span>
                     <span>{{ latest_parking.get_status_display }}</span>
                 </div>
                 
-                <div class="pt-3 border-t border-gray-200">
-                    <p class="text-xs text-gray-500">
+                <div class="pt-3 border-t border-slate-800">
+                    <p class="text-xs text-slate-400">
                         Dernière mise à jour : 
-                        <span class="font-medium {% if parking_is_fresh %}text-green-600{% else %}text-red-600{% endif %}">
+                        <span class="font-medium {% if parking_is_fresh %}text-emerald-400{% else %}text-red-400{% endif %}">
                             {{ latest_parking.timestamp|date:"H:i:s" }}
                         </span>
                     </p>
@@ -100,19 +104,19 @@
             </div>
             {% else %}
             <div class="text-center py-8">
-                <p class="text-gray-500">Aucune donnée disponible</p>
+                <p class="text-slate-500">Aucune donnée disponible</p>
             </div>
             {% endif %}
         </div>
 
         <!-- Traffic Aller Card -->
-        <div class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_traffic_aller and latest_traffic_aller.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_aller and latest_traffic_aller.traffic_status == 'modere' %}border-yellow-500{% else %}border-green-500{% endif %}">
+        <div class="bg-slate-900/80 rounded-xl shadow-md shadow-slate-900/60 p-6 border border-slate-800 border-l-4 {% if latest_traffic_aller and latest_traffic_aller.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_aller and latest_traffic_aller.traffic_status == 'modere' %}border-amber-400{% else %}border-emerald-500{% endif %}">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Trafic Aller</h3>
+                <h3 class="text-lg font-semibold text-slate-50">Trafic Aller</h3>
                 {% if traffic_aller_is_fresh %}
-                <span class="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">LIVE</span>
+                <span class="px-2 py-1 text-xs font-medium bg-emerald-500/20 text-emerald-300 rounded border border-emerald-500/60">LIVE</span>
                 {% else %}
-                <span class="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded">OBSOLÈTE</span>
+                <span class="px-2 py-1 text-xs font-medium bg-slate-800 text-slate-300 rounded border border-slate-700">OBSOLÈTE</span>
                 {% endif %}
             </div>
             
@@ -120,42 +124,47 @@
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Durée</p>
-                        <p class="text-3xl font-bold text-gray-900 mt-1">
+                        <p class="text-sm font-medium text-slate-400">Durée</p>
+                        <p class="text-3xl font-bold text-slate-50 mt-1">
                             {{ latest_traffic_aller.duration_in_traffic_minutes|floatformat:0 }} min
                         </p>
                     </div>
-                    <div class="text-4xl">
-                        {% if latest_traffic_aller.traffic_status == 'bloque' %}🔴
-                        {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}🟠
-                        {% elif latest_traffic_aller.traffic_status == 'modere' %}🟡
-                        {% else %}🟢{% endif %}
+                    <div id="traffic-aller-emoji">
+                        {% if latest_traffic_aller.traffic_status == 'bloque' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-red-500" aria-hidden="true"></span>
+                        {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-orange-500" aria-hidden="true"></span>
+                        {% elif latest_traffic_aller.traffic_status == 'modere' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-yellow-400" aria-hidden="true"></span>
+                        {% else %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-green-500" aria-hidden="true"></span>
+                        {% endif %}
                     </div>
                 </div>
                 
                 <div>
-                    <p class="text-sm text-gray-600">Statut</p>
-                    <p class="text-lg font-semibold text-gray-900">{{ latest_traffic_aller.get_traffic_status_display }}</p>
+                    <p class="text-sm text-slate-400">Statut</p>
+                    <p class="text-lg font-semibold text-slate-50">{{ latest_traffic_aller.get_traffic_status_display }}</p>
                 </div>
                 
                 {% if latest_traffic_aller.delay_seconds > 0 %}
-                <div class="bg-red-50 border border-red-200 rounded-lg p-3">
-                    <p class="text-sm text-red-800">
+                <div class="bg-red-950/60 border border-red-500/60 rounded-lg p-3">
+                    <p class="text-sm text-red-200">
                         <strong>Retard :</strong> +{{ latest_traffic_aller.delay_minutes|floatformat:1 }} min
                         ({{ latest_traffic_aller.delay_percentage|floatformat:1 }}%)
                     </p>
                 </div>
                 {% else %}
-                <div class="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p class="text-sm text-green-800">Aucun retard</p>
+                <div class="bg-emerald-950/60 border border-emerald-500/60 rounded-lg p-3">
+                    <p class="text-sm text-emerald-200">Aucun retard</p>
                 </div>
                 {% endif %}
                 
-                <div class="pt-3 border-t border-gray-200" id="traffic-aller-info">
-                    <p class="text-xs text-gray-500">
+                <div class="pt-3 border-t border-slate-800" id="traffic-aller-info">
+                    <p class="text-xs text-slate-400">
                         Distance : {{ latest_traffic_aller.distance_km|floatformat:2 }} km
                     </p>
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs text-slate-400 mt-1">
                         Dernière mise à jour : 
                         <span class="font-medium {% if traffic_aller_is_fresh %}text-green-600{% else %}text-red-600{% endif %}" id="traffic-aller-time">
                             {{ latest_traffic_aller.timestamp|date:"H:i:s" }}
@@ -171,10 +180,10 @@
         </div>
 
         <!-- Traffic Retour Card -->
-        <div id="traffic-retour-card" class="bg-white rounded-lg shadow-md p-6 border-l-4 {% if latest_traffic_retour and latest_traffic_retour.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_retour and latest_traffic_retour.traffic_status == 'modere' %}border-yellow-500{% else %}border-green-500{% endif %}">
+        <div id="traffic-retour-card" class="bg-slate-900/80 rounded-xl shadow-md shadow-slate-900/60 p-6 border border-slate-800 border-l-4 {% if latest_traffic_retour and latest_traffic_retour.traffic_status in 'embouteillage,bloque' %}border-red-500{% elif latest_traffic_retour and latest_traffic_retour.traffic_status == 'modere' %}border-amber-400{% else %}border-emerald-500{% endif %}">
             <div class="flex items-center justify-between mb-4">
-                <h3 class="text-lg font-semibold text-gray-900">Trafic Retour</h3>
-                <span id="traffic-retour-badge" class="px-2 py-1 text-xs font-medium {% if traffic_retour_is_fresh %}bg-green-100 text-green-800{% else %}bg-gray-100 text-gray-800{% endif %} rounded">
+                <h3 class="text-lg font-semibold text-slate-50">Trafic Retour</h3>
+                <span id="traffic-retour-badge" class="px-2 py-1 text-xs font-medium {% if traffic_retour_is_fresh %}bg-emerald-500/20 text-emerald-300 border-emerald-500/60{% else %}bg-slate-800 text-slate-300 border-slate-700{% endif %} rounded border">
                     {% if traffic_retour_is_fresh %}LIVE{% else %}OBSOLÈTE{% endif %}
                 </span>
             </div>
@@ -183,26 +192,31 @@
             <div class="space-y-3">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-gray-600">Durée</p>
-                        <p id="traffic-retour-duration" class="text-3xl font-bold text-gray-900 mt-1">
+                        <p class="text-sm font-medium text-slate-400">Durée</p>
+                        <p id="traffic-retour-duration" class="text-3xl font-bold text-slate-50 mt-1">
                             {{ latest_traffic_retour.duration_in_traffic_minutes|floatformat:0 }} min
                         </p>
                     </div>
-                    <div id="traffic-retour-emoji" class="text-4xl">
-                        {% if latest_traffic_retour.traffic_status == 'bloque' %}🔴
-                        {% elif latest_traffic_retour.traffic_status == 'embouteillage' %}🟠
-                        {% elif latest_traffic_retour.traffic_status == 'modere' %}🟡
-                        {% else %}🟢{% endif %}
+                    <div id="traffic-retour-emoji">
+                        {% if latest_traffic_retour.traffic_status == 'bloque' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-red-500" aria-hidden="true"></span>
+                        {% elif latest_traffic_retour.traffic_status == 'embouteillage' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-orange-500" aria-hidden="true"></span>
+                        {% elif latest_traffic_retour.traffic_status == 'modere' %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-yellow-400" aria-hidden="true"></span>
+                        {% else %}
+                        <span class="inline-flex h-4 w-4 rounded-full bg-green-500" aria-hidden="true"></span>
+                        {% endif %}
                     </div>
                 </div>
                 
                 <div>
-                    <p class="text-sm text-gray-600">Statut</p>
-                    <p id="traffic-retour-status" class="text-lg font-semibold text-gray-900">{{ latest_traffic_retour.get_traffic_status_display }}</p>
+                    <p class="text-sm text-slate-400">Statut</p>
+                    <p id="traffic-retour-status" class="text-lg font-semibold text-slate-50">{{ latest_traffic_retour.get_traffic_status_display }}</p>
                 </div>
                 
-                <div id="traffic-retour-delay-box" class="{% if latest_traffic_retour.delay_seconds > 0 %}bg-red-50 border border-red-200 rounded-lg p-3{% else %}bg-green-50 border border-green-200 rounded-lg p-3{% endif %}">
-                    <p class="text-sm {% if latest_traffic_retour.delay_seconds > 0 %}text-red-800{% else %}text-green-800{% endif %}">
+                <div id="traffic-retour-delay-box" class="{% if latest_traffic_retour.delay_seconds > 0 %}bg-red-950/60 border border-red-500/60 rounded-lg p-3{% else %}bg-emerald-950/60 border border-emerald-500/60 rounded-lg p-3{% endif %}">
+                    <p class="text-sm {% if latest_traffic_retour.delay_seconds > 0 %}text-red-200{% else %}text-emerald-200{% endif %}">
                         {% if latest_traffic_retour.delay_seconds > 0 %}
                         <strong>Retard :</strong> +<span id="traffic-retour-delay-minutes">{{ latest_traffic_retour.delay_minutes|floatformat:1 }}</span> min
                         (<span id="traffic-retour-delay-percentage">{{ latest_traffic_retour.delay_percentage|floatformat:1 }}</span>%)
@@ -212,11 +226,11 @@
                     </p>
                 </div>
                 
-                <div class="pt-3 border-t border-gray-200" id="traffic-retour-info">
-                    <p class="text-xs text-gray-500">
+                <div class="pt-3 border-t border-slate-800" id="traffic-retour-info">
+                    <p class="text-xs text-slate-400">
                         Distance : <span id="traffic-retour-distance">{{ latest_traffic_retour.distance_km|floatformat:2 }}</span> km
                     </p>
-                    <p class="text-xs text-gray-500 mt-1">
+                    <p class="text-xs text-slate-400 mt-1">
                         Dernière mise à jour : 
                         <span id="traffic-retour-time" class="font-medium {% if traffic_retour_is_fresh %}text-green-600{% else %}text-red-600{% endif %}">
                             {{ latest_traffic_retour.timestamp|date:"H:i:s" }}
@@ -233,12 +247,12 @@
     </div>
 
             <!-- Graphique de visualisation du trajet -->
-            <div class="bg-white rounded-lg shadow-md p-6">
-                <h3 class="text-lg font-semibold text-gray-900 mb-4">Visualisation du Trajet</h3>
+            <div class="bg-slate-900/80 rounded-xl shadow-md shadow-slate-900/60 p-6 border border-slate-800">
+                <h3 class="text-lg font-semibold text-slate-50 mb-4">Visualisation du Trajet</h3>
                 
                 <!-- Graphique SVG avec deux points et un trait -->
                 <div class="flex justify-center items-center py-8">
-                    <svg id="traffic-graph" width="100%" height="200" viewBox="0 0 800 200" class="border border-gray-200 rounded-lg bg-gray-50">
+                    <svg id="traffic-graph" width="100%" height="200" viewBox="0 0 800 200" class="border border-slate-800 rounded-lg bg-slate-950">
                         <!-- Ligne de trajet -->
                         <line id="traffic-line" 
                               x1="100" y1="100" 
@@ -274,16 +288,16 @@
                 </div>
                 
                 <!-- Informations du trajet -->
-                <div class="mt-4 text-sm text-gray-600 space-y-2">
+                <div class="mt-4 text-sm text-slate-300 space-y-2">
                     <div class="flex justify-between">
                         <span><strong>Point de départ :</strong> {{ start_latitude }}, {{ start_longitude }}</span>
                         <span id="traffic-aller-status-badge" class="px-2 py-1 text-xs font-medium rounded
                             {% if latest_traffic_aller %}
-                                {% if latest_traffic_aller.traffic_status == 'bloque' %}bg-red-100 text-red-800
-                                {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}bg-orange-100 text-orange-800
-                                {% elif latest_traffic_aller.traffic_status == 'modere' %}bg-yellow-100 text-yellow-800
-                                {% else %}bg-green-100 text-green-800{% endif %}
-                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {% if latest_traffic_aller.traffic_status == 'bloque' %}bg-red-500/20 text-red-300 border border-red-500/60
+                                {% elif latest_traffic_aller.traffic_status == 'embouteillage' %}bg-orange-500/20 text-orange-300 border border-orange-500/60
+                                {% elif latest_traffic_aller.traffic_status == 'modere' %}bg-amber-500/20 text-amber-300 border border-amber-500/60
+                                {% else %}bg-emerald-500/20 text-emerald-300 border border-emerald-500/60{% endif %}
+                            {% else %}bg-slate-800 text-slate-300 border border-slate-700{% endif %}">
                             {% if latest_traffic_aller %}{{ latest_traffic_aller.get_traffic_status_display }}{% else %}N/A{% endif %}
                         </span>
                     </div>
@@ -314,27 +328,27 @@
             {% endcomment %}
 
     <!-- Action Buttons -->
-    <div class="bg-white rounded-lg shadow-md p-6">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Actions rapides</h3>
+    <div class="bg-slate-900/80 rounded-xl shadow-md shadow-slate-900/60 p-6 border border-slate-800">
+        <h3 class="text-lg font-semibold text-slate-50 mb-4">Actions rapides</h3>
         <div class="flex flex-wrap gap-3 items-center">
             <form method="post" action="{% url 'web:check_traffic_now' %}" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="direction" value="aller">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition font-medium">
                     Vérifier Trafic Aller
                 </button>
             </form>
             <form method="post" action="{% url 'web:check_traffic_now' %}" class="inline">
                 {% csrf_token %}
                 <input type="hidden" name="direction" value="retour">
-                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium">
+                <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-500 transition font-medium">
                     Vérifier Trafic Retour
                 </button>
             </form>
             <div class="flex items-center space-x-2">
-                <div id="auto-check-indicator" class="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
-                <span class="text-sm text-gray-600">Vérification automatique toutes les 45 minutes</span>
-                <span id="last-check-time" class="text-xs text-gray-500 ml-2"></span>
+                <div id="auto-check-indicator" class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span class="text-sm text-slate-300">Vérification automatique toutes les 45 minutes</span>
+                <span id="last-check-time" class="text-xs text-slate-400 ml-2"></span>
             </div>
         </div>
     </div>
@@ -518,23 +532,23 @@
             durationEl.textContent = Math.round(data.duration_in_traffic_minutes) + ' min';
         }
         
-        // Mettre à jour l'emoji et la bordure de la carte
+        // Mettre à jour l'indicateur visuel et la bordure de la carte
         const emojiEl = document.getElementById(`${prefix}-emoji`);
         const cardEl = document.getElementById(`${prefix}-card`);
         if (emojiEl && cardEl && data.traffic_status) {
-            let emoji = '🟢';
+            let colorClass = 'bg-green-500';
             let borderColor = 'border-green-500';
             if (data.traffic_status === 'bloque') {
-                emoji = '🔴';
+                colorClass = 'bg-red-500';
                 borderColor = 'border-red-500';
             } else if (data.traffic_status === 'embouteillage') {
-                emoji = '🟠';
+                colorClass = 'bg-orange-500';
                 borderColor = 'border-red-500';
             } else if (data.traffic_status === 'modere') {
-                emoji = '🟡';
+                colorClass = 'bg-yellow-400';
                 borderColor = 'border-yellow-500';
             }
-            emojiEl.textContent = emoji;
+            emojiEl.className = `inline-flex h-4 w-4 rounded-full ${colorClass}`;
             // Mettre à jour la bordure
             cardEl.classList.remove('border-red-500', 'border-yellow-500', 'border-green-500');
             cardEl.classList.add(borderColor);
